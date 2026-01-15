@@ -11,3 +11,8 @@ export const createTimeEntry = async (
   const response = await api.post("/time-entries", timeEntry);
   return response.data;
 };
+
+export const getTimeEntries = async (): Promise<TimeEntry[]> => {
+  const response = await api.get("/time-entries");
+  return response.data;
+};
