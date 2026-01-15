@@ -5,8 +5,16 @@ export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 });
 
+export interface CreateTimeEntryPayload {
+  description: string;
+  startTime: string; // ISO
+  endTime: string; // ISO
+  projectId: number;
+  projectName: string;
+}
+
 export const createTimeEntry = async (
-  timeEntry: Omit<TimeEntry, "id" | "createdAt" | "updatedAt">
+  timeEntry: CreateTimeEntryPayload
 ): Promise<TimeEntry> => {
   const response = await api.post("/time-entries", timeEntry);
   return response.data;

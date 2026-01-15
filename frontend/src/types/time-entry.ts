@@ -1,9 +1,10 @@
 export interface TimeEntry {
-  id: number;
-  date: string;
-  projectId: number;
-  hours: number;
+  id: string;
   description: string;
+  startTime: string;
+  endTime: string;
+  projectId?: number;
+  projectName?: string;
   createdAt: string;
   updatedAt: string;
 }

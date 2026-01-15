@@ -1,5 +1,6 @@
 import { useState } from "react";
-import type { NewTimeEntry, Project } from "../../types/time-entry";
+import { useSWRConfig } from "swr";
+import type { Project } from "../../types/time-entry";
 import { createTimeEntry } from "../../services/api";
 
 const projects: Project[] = [
@@ -10,6 +11,7 @@ const projects: Project[] = [
 ];
 
 export const TimeEntryForm = () => {
+  const { mutate } = useSWRConfig();
   const [description, setDescription] = useState("");
   const [hours, setHours] = useState(0);
   const [projectId, setProjectId] = useState(projects[0].id);
@@ -29,20 +31,26 @@ export const TimeEntryForm = () => {
       return;
     }
 
-    const newTimeEntry: NewTimeEntry = {
-      date,
-      projectId,
-      hours,
-      description,
-    };
+    // Backend expects description, startTime and endTime (ISO strings).
+    // Build startTime from the selected date at 09:00 local time and add hours for endTime.
+    const start = new Date(`${date}T09:00:00`);
+    const end = new Date(start.getTime() + hours * 60 * 60 * 1000);
 
     try {
-      await createTimeEntry(newTimeEntry);
+      const selectedProject = projects.find((p) => p.id === projectId)!;
+      await createTimeEntry({
+        description,
+        startTime: start.toISOString(),
+        endTime: end.toISOString(),
+        projectId: selectedProject.id,
+        projectName: selectedProject.name,
+      });
       setDescription("");
       setHours(0);
       setProjectId(projects[0].id);
       setDate(new Date().toISOString().slice(0, 10));
       setError(null);
+      mutate("time-entries");
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message);

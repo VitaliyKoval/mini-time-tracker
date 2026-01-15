@@ -7,7 +7,10 @@ interface TimeEntryListProps {
 
 const TimeEntryList: React.FC<TimeEntryListProps> = ({ entries }) => {
   const groupedEntries = entries.reduce((acc, entry) => {
-    const date = new Date(entry.date).toDateString();
+    // entries from backend provide startTime/endTime; compute date from startTime
+    const date = entry.startTime
+      ? new Date(entry.startTime).toDateString()
+      : new Date().toDateString();
     if (!acc[date]) {
       acc[date] = [];
     }
@@ -15,24 +18,38 @@ const TimeEntryList: React.FC<TimeEntryListProps> = ({ entries }) => {
     return acc;
   }, {} as Record<string, TimeEntry[]>);
 
-  const grandTotal = entries.reduce((total, entry) => total + entry.hours, 0);
+  const getEntryHours = (entry: TimeEntry) => {
+    if (entry.hours !== undefined && entry.hours !== null) return entry.hours;
+    if (entry.startTime && entry.endTime) {
+      const start = new Date(entry.startTime).getTime();
+      const end = new Date(entry.endTime).getTime();
+      const hours = (end - start) / (1000 * 60 * 60);
+      return Number.isFinite(hours) ? hours : 0;
+    }
+    return 0;
+  };
+
+  const grandTotal = entries.reduce(
+    (total, entry) => total + getEntryHours(entry),
+    0
+  );
 
   return (
     <div className="mt-8">
       <h2 className="text-2xl font-bold mb-4">Entry History</h2>
       {Object.entries(groupedEntries).map(([date, dayEntries]) => {
         const dailyTotal = dayEntries.reduce(
-          (total, entry) => total + entry.hours,
+          (total, entry) => total + getEntryHours(entry),
           0
         );
         return (
           <div key={date} className="mb-6">
             <div className="flex justify-between items-center mb-2 pb-1 border-b-2">
               <h3 className="text-xl font-bold">
-                {new Date(date).toLocaleDateString(undefined, {
-                  weekday: "long",
+                {new Date(date).toLocaleDateString("en-US", {
+                  weekday: "short",
                   year: "numeric",
-                  month: "long",
+                  month: "short",
                   day: "numeric",
                 })}
               </h3>
@@ -51,7 +68,11 @@ const TimeEntryList: React.FC<TimeEntryListProps> = ({ entries }) => {
                 >
                   <div className="flex-1">
                     <span className="font-semibold">
-                      Project {entry.projectId}
+                      {entry.projectName
+                        ? entry.projectName
+                        : entry.projectId
+                        ? `Project ${entry.projectId}`
+                        : "Project"}
                     </span>
                     {entry.description && (
                       <p className="text-sm text-gray-600">
@@ -60,7 +81,7 @@ const TimeEntryList: React.FC<TimeEntryListProps> = ({ entries }) => {
                     )}
                   </div>
                   <span className="font-semibold text-lg">
-                    {entry.hours.toFixed(2)}h
+                    {getEntryHours(entry).toFixed(2)}h
                   </span>
                 </li>
               ))}

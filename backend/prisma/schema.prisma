@@ -15,6 +15,8 @@ model TimeEntry {
   description String
   startTime   DateTime
   endTime     DateTime
+  projectId   Int?
+  projectName String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

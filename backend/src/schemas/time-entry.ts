@@ -5,6 +5,8 @@ export const createTimeEntrySchema = {
     description: Joi.string().required(),
     startTime: Joi.date().iso().required(),
     endTime: Joi.date().iso().greater(Joi.ref("startTime")).required(),
+    projectId: Joi.number().integer().required(),
+    projectName: Joi.string().required(),
   }),
 };
 
