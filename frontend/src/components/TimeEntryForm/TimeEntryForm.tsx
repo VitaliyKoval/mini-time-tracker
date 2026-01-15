@@ -45,7 +45,9 @@ export const TimeEntryForm = () => {
       const sumExisting = entries.reduce((acc: number, e) => {
         const s = new Date(e.startTime).toISOString().slice(0, 10);
         if (s !== selectedDateStr) return acc;
-        const eh = (new Date(e.endTime).getTime() - new Date(e.startTime).getTime()) / (1000 * 60 * 60);
+        const eh =
+          (new Date(e.endTime).getTime() - new Date(e.startTime).getTime()) /
+          (1000 * 60 * 60);
         return acc + (Number.isFinite(eh) ? eh : 0);
       }, 0);
 
@@ -137,7 +139,6 @@ export const TimeEntryForm = () => {
           min={0}
           step={0.25}
         />
-        <p className="text-xs text-gray-500 mt-1">Enter hours (quarters allowed, e.g. 0.25)</p>
       </div>
       <div>
         <label htmlFor="description">Description</label>
@@ -146,14 +147,18 @@ export const TimeEntryForm = () => {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           className="w-full p-2 border rounded-md"
+          rows={3}
         />
+
       </div>
       <button
         type="submit"
-        className={`w-full p-2 text-white rounded-md ${isSubmitting ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}
+        className={`w-full p-2 text-white rounded-md ${
+          isSubmitting ? "bg-blue-300" : "bg-blue-600 hover:bg-blue-700"
+        }`}
         disabled={isSubmitting}
       >
-        {isSubmitting ? 'Saving...' : 'Submit'}
+        {isSubmitting ? "Saving..." : "Submit"}
       </button>
     </form>
   );

@@ -19,7 +19,9 @@ const TimeEntryList: React.FC<TimeEntryListProps> = ({ entries }) => {
   }, {} as Record<string, TimeEntry[]>);
 
   // ensure dates are sorted descending
-  const sortedDates = Object.keys(groupedEntries).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+  const sortedDates = Object.keys(groupedEntries).sort(
+    (a, b) => new Date(b).getTime() - new Date(a).getTime()
+  );
 
   const getEntryHours = (entry: TimeEntry) => {
     if (entry.startTime && entry.endTime) {
@@ -40,7 +42,9 @@ const TimeEntryList: React.FC<TimeEntryListProps> = ({ entries }) => {
     return (
       <div className="mt-8 text-center text-gray-600">
         <h2 className="text-2xl font-bold mb-2">Entry History</h2>
-        <p className="mb-4">No time entries yet. Use the form above to add your first entry.</p>
+        <p className="mb-4">
+          No time entries yet. Use the form above to add your first entry.
+        </p>
       </div>
     );
   }
