@@ -11,8 +11,10 @@ datasource db {
 }
 
 model TimeEntry {
-  id        Int      @id @default(autoincrement())
-  startTime DateTime
-  endTime   DateTime?
-  task      String
+  id          String   @id @default(cuid())
+  date        DateTime @default(now())
+  project     String
+  hours       Float
+  description String?
+  createdAt   DateTime @default(now())
 }

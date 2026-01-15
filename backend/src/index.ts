@@ -17,12 +17,12 @@ app.get("/time-entries", async (req, res) => {
 });
 
 app.post("/time-entries", async (req, res) => {
-  const { startTime, endTime, task } = req.body;
+  const { project, hours, description } = req.body;
   const timeEntry = await prisma.timeEntry.create({
     data: {
-      startTime,
-      endTime,
-      task,
+      project,
+      hours,
+      description,
     },
   });
   res.json(timeEntry);
@@ -30,13 +30,13 @@ app.post("/time-entries", async (req, res) => {
 
 app.put("/time-entries/:id", async (req, res) => {
   const { id } = req.params;
-  const { startTime, endTime, task } = req.body;
+  const { project, hours, description } = req.body;
   const timeEntry = await prisma.timeEntry.update({
-    where: { id: Number(id) },
+    where: { id },
     data: {
-      startTime,
-      endTime,
-      task,
+      project,
+      hours,
+      description,
     },
   });
   res.json(timeEntry);
@@ -45,7 +45,7 @@ app.put("/time-entries/:id", async (req, res) => {
 app.delete("/time-entries/:id", async (req, res) => {
   const { id } = req.params;
   await prisma.timeEntry.delete({
-    where: { id: Number(id) },
+    where: { id },
   });
   res.json({ message: "Time entry deleted" });
 });
