@@ -1,0 +1,32 @@
+{
+  "name": "mini-time-tracker",
+  "version": "1.0.0",
+  "description": "A mini time tracker application with backend and frontend",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm:server\" \"npm:client\"",
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && npm run dev",
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "start": "node backend/dist/index.js",
+    "build": "cd backend && tsc && cd ../frontend && npm run build"
+  },
+  "keywords": [
+    "time-tracker",
+    "react",
+    "express",
+    "typescript"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ]
+}
