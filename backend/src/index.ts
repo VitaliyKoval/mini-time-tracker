@@ -1,6 +1,11 @@
 import express from "express";
 import cors from "cors";
 import { PrismaClient } from "@prisma/client";
+import {
+  validateCreateTimeEntry,
+  validateUpdateTimeEntry,
+} from "./middleware/validation";
+import { handleErrors } from "./middleware/errors";
 
 require("dotenv").config();
 
@@ -11,98 +16,75 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-app.get("/time-entries", async (req, res) => {
-  const timeEntries = await prisma.timeEntry.findMany({
-    orderBy: {
-      date: "desc",
-    },
-  });
-  res.json(timeEntries);
-});
-
-app.post("/time-entries", async (req, res) => {
-  const { project, hours, date, description } = req.body;
-
-  if (!project || !hours || !date) {
-    return res.status(400).json({
-      message: "Project, hours, and date are required",
-    });
-  }
-
-  if (hours <= 0) {
-    return res.status(400).json({
-      message: "Hours must be greater than 0",
-    });
-  }
-
-  const newDate = new Date(date);
-  const startOfDay = new Date(
-    newDate.getFullYear(),
-    newDate.getMonth(),
-    newDate.getDate()
-  );
-  const endOfDay = new Date(
-    newDate.getFullYear(),
-    newDate.getMonth(),
-    newDate.getDate() + 1
-  );
-
-  const todaysEntries = await prisma.timeEntry.findMany({
-    where: {
-      date: {
-        gte: startOfDay,
-        lt: endOfDay,
+app.get("/time-entries", async (req, res, next) => {
+  try {
+    const timeEntries = await prisma.timeEntry.findMany({
+      orderBy: {
+        startTime: "desc",
       },
-    },
-  });
-
-  const totalHours = todaysEntries.reduce(
-    (sum: number, entry: { hours: number }) => sum + entry.hours,
-    0
-  );
-
-  if (totalHours + hours > 24) {
-    return res.status(400).json({
-      message: "Total hours for this date cannot exceed 24",
     });
+    res.json(timeEntries);
+  } catch (error) {
+    next(error);
   }
-
-  const timeEntry = await prisma.timeEntry.create({
-    data: {
-      project,
-      hours,
-      date: newDate,
-      description,
-    },
-  });
-  res.json(timeEntry);
 });
 
-app.put("/time-entries/:id", async (req, res) => {
-  const { id } = req.params;
-  const { project, hours, description } = req.body;
-  const timeEntry = await prisma.timeEntry.update({
-    where: { id },
-    data: {
-      project,
-      hours,
-      description,
-    },
-  });
-  res.json(timeEntry);
+app.post("/time-entries", validateCreateTimeEntry, async (req, res, next) => {
+  try {
+    const { description, startTime, endTime } = req.body;
+
+    const timeEntry = await prisma.timeEntry.create({
+      data: {
+        description,
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+      },
+    });
+    res.json(timeEntry);
+  } catch (error) {
+    next(error);
+  }
 });
 
-app.delete("/time-entries/:id", async (req, res) => {
-  const { id } = req.params;
-  await prisma.timeEntry.delete({
-    where: { id },
-  });
-  res.json({ message: "Time entry deleted" });
+app.put(
+  "/time-entries/:id",
+  validateUpdateTimeEntry,
+  async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const { description, startTime, endTime } = req.body;
+      const timeEntry = await prisma.timeEntry.update({
+        where: { id: String(id) },
+        data: {
+          description,
+          startTime: startTime ? new Date(startTime) : undefined,
+          endTime: endTime ? new Date(endTime) : undefined,
+        },
+      });
+      res.json(timeEntry);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+app.delete("/time-entries/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await prisma.timeEntry.delete({
+      where: { id: String(id) },
+    });
+    res.json({ message: "Time entry deleted" });
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
+
+app.use(handleErrors);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

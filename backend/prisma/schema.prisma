@@ -12,9 +12,9 @@ datasource db {
 
 model TimeEntry {
   id          String   @id @default(cuid())
-  date        DateTime @default(now())
-  project     String
-  hours       Float
-  description String?
+  description String
+  startTime   DateTime
+  endTime     DateTime
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
