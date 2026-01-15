@@ -38,16 +38,50 @@ router.post(
       const { description, startTime, endTime, projectId, projectName } =
         req.body;
 
-      const timeEntry = await prisma.timeEntry.create({
-        data: {
-          description,
-          startTime: new Date(startTime),
-          endTime: new Date(endTime),
-          projectId: projectId ?? null,
-          projectName: projectName ?? null,
-        },
-      });
-      res.json(timeEntry);
+        const start = new Date(startTime);
+        const end = new Date(endTime);
+        const newHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+
+        // compute UTC calendar date for the entry
+        const dateStr = start.toISOString().slice(0, 10);
+        const dateStart = new Date(`${dateStr}T00:00:00.000Z`);
+        const nextDate = new Date(dateStart.getTime() + 24 * 60 * 60 * 1000);
+
+        // sum existing hours for that calendar date
+        const existing = await prisma.timeEntry.findMany({
+          where: {
+            startTime: {
+              gte: dateStart,
+              lt: nextDate,
+            },
+          },
+        });
+
+        const existingHours = existing.reduce((acc: number, e: any) => {
+          const s = new Date(e.startTime).getTime();
+          const en = new Date(e.endTime).getTime();
+          const hours = (en - s) / (1000 * 60 * 60);
+          return acc + (Number.isFinite(hours) ? hours : 0);
+        }, 0);
+
+        if (existingHours + newHours > 24 + 1e-9) {
+          return res.status(400).json({
+            statusCode: 400,
+            message: "Total hours for the selected date cannot exceed 24 hours.",
+          });
+        }
+
+        const timeEntry = await prisma.timeEntry.create({
+          data: {
+            description,
+            startTime: start,
+            endTime: end,
+            projectId: projectId ?? null,
+            projectName: projectName ?? null,
+          },
+        });
+
+        res.json(timeEntry);
     } catch (error) {
       next(error);
     }
@@ -61,6 +95,42 @@ router.put(
     try {
       const { id } = req.params;
       const { description, startTime, endTime } = req.body;
+
+      // If startTime and endTime are provided, validate the 24-hour-per-day constraint
+      if (startTime && endTime) {
+        const start = new Date(startTime);
+        const end = new Date(endTime);
+        const newHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+
+        const dateStr = start.toISOString().slice(0, 10);
+        const dateStart = new Date(`${dateStr}T00:00:00.000Z`);
+        const nextDate = new Date(dateStart.getTime() + 24 * 60 * 60 * 1000);
+
+        const existing = await prisma.timeEntry.findMany({
+          where: {
+            startTime: {
+              gte: dateStart,
+              lt: nextDate,
+            },
+            AND: [{ id: { not: String(id) } }],
+          },
+        });
+
+        const existingHours = existing.reduce((acc: number, e: any) => {
+          const s = new Date(e.startTime).getTime();
+          const en = new Date(e.endTime).getTime();
+          const hours = (en - s) / (1000 * 60 * 60);
+          return acc + (Number.isFinite(hours) ? hours : 0);
+        }, 0);
+
+        if (existingHours + newHours > 24 + 1e-9) {
+          return res.status(400).json({
+            statusCode: 400,
+            message: "Total hours for the selected date cannot exceed 24 hours.",
+          });
+        }
+      }
+
       const timeEntry = await prisma.timeEntry.update({
         where: { id: String(id) },
         data: {

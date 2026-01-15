@@ -18,8 +18,10 @@ const TimeEntryList: React.FC<TimeEntryListProps> = ({ entries }) => {
     return acc;
   }, {} as Record<string, TimeEntry[]>);
 
+  // ensure dates are sorted descending
+  const sortedDates = Object.keys(groupedEntries).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
   const getEntryHours = (entry: TimeEntry) => {
-    if (entry.hours !== undefined && entry.hours !== null) return entry.hours;
     if (entry.startTime && entry.endTime) {
       const start = new Date(entry.startTime).getTime();
       const end = new Date(entry.endTime).getTime();
@@ -34,10 +36,20 @@ const TimeEntryList: React.FC<TimeEntryListProps> = ({ entries }) => {
     0
   );
 
+  if (!entries || entries.length === 0) {
+    return (
+      <div className="mt-8 text-center text-gray-600">
+        <h2 className="text-2xl font-bold mb-2">Entry History</h2>
+        <p className="mb-4">No time entries yet. Use the form above to add your first entry.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-8">
       <h2 className="text-2xl font-bold mb-4">Entry History</h2>
-      {Object.entries(groupedEntries).map(([date, dayEntries]) => {
+      {sortedDates.map((date) => {
+        const dayEntries = groupedEntries[date];
         const dailyTotal = dayEntries.reduce(
           (total, entry) => total + getEntryHours(entry),
           0
@@ -64,7 +76,7 @@ const TimeEntryList: React.FC<TimeEntryListProps> = ({ entries }) => {
               {dayEntries.map((entry) => (
                 <li
                   key={entry.id}
-                  className="flex justify-between items-center py-2 px-4 odd:bg-gray-50"
+                  className="flex justify-between items-center py-2 px-4 odd:bg-gray-50 hover:bg-gray-100 rounded"
                 >
                   <div className="flex-1">
                     <span className="font-semibold">
