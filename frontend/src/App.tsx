@@ -1,11 +1,12 @@
+import { TimeEntryForm } from "./components/TimeEntryForm";
+
 function App() {
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <h1 className="text-4xl font-bold text-blue-600">
-        Hello World!
-      </h1>
+    <div className="container mx-auto p-4 max-w-[800px]">
+      <h1 className="text-2xl font-bold mb-4 text-center">Time Tracker</h1>
+      <TimeEntryForm />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
