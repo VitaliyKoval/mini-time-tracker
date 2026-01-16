@@ -137,7 +137,7 @@ export const TimeEntryForm = () => {
           onChange={(e) => setHours(Number(e.target.value))}
           className="w-full p-2 border rounded-md"
           min={0}
-          step={0.25}
+          step={0.5}
         />
       </div>
       <div>
@@ -163,3 +163,4 @@ export const TimeEntryForm = () => {
     </form>
   );
 };
+
